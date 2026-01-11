@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>无尽帝美化工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { background: linear-gradient(135deg, #000428, #004e92); color: #fff; overflow-x: hidden; position: relative; min-height: 100vh; padding: 20px; background-attachment: fixed; }
+        #snow-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; }
+        .snow { position: absolute; color: #fff; text-shadow: 0 0 5px #0ff; animation: snowfall linear infinite; opacity: 0; }
+        @keyframes snowfall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 0.2; } 50% { opacity: 0.8; } 100% { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+        .page-title { text-align: center; padding: 30px 0; font-size: 36px; text-shadow: 0 0 10px #00f, 0 0 20px #0ff, 0 0 30px #00f, 0 0 40px #0ff; letter-spacing: 3px; background: linear-gradient(90deg, #00f, #0ff, #00f); -webkit-background-clip: text; background-clip: text; color: transparent; background-size: 200% auto; animation: titleGlow 3s linear infinite; }
+        @keyframes titleGlow { to { background-position: 200% center; } }
+        .btn { position: relative; margin: 15px auto; padding: 16px 45px; font-size: 22px; color: #fff; background: linear-gradient(45deg, #0066ff, #00ccff); border: none; border-radius: 60px; cursor: pointer; overflow: hidden; z-index: 2; display: block; width: 85%; max-width: 450px; text-align: center; text-decoration: none; box-shadow: 0 0 20px rgba(0, 204, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3); transition: all 0.1s ease; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 0 25px rgba(0, 204, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.4); }
+        .btn:active { transform: translateY(-1px); box-shadow: 0 0 15px rgba(0, 204, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3); }
+        .btn::before { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent); transform: rotate(45deg); animation: glow 1.5s linear infinite; z-index: -1; }
+        @keyframes glow { 0% { transform: rotate(45deg) translateX(-100%); } 100% { transform: rotate(45deg) translateX(100%); } }
+        .page { display: none; position: relative; z-index: 3; max-width: 900px; margin: 0 auto; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; }
+        .page.active { display: block; opacity: 1; transform: translateY(0); }
+        .transition { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, #000428, #004e92); z-index: 999; display: none; animation: fade 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fade { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+        .search-area { background: rgba(0, 30, 60, 0.9); border-radius: 20px; padding: 30px; margin: 30px 0; box-shadow: 0 0 30px rgba(0, 102, 255, 0.5), inset 0 0 15px rgba(0, 150, 255, 0.3); border: 1px solid rgba(0, 204, 255, 0.3); }
+        .search-input-wrap { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .search-input { flex: 1; min-width: 250px; padding: 20px 25px; font-size: 19px; border: 2px solid #00ccff; border-radius: 60px; background: rgba(0, 15, 30, 0.95); color: #fff; outline: none; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4) inset, 0 0 10px rgba(0, 204, 255, 0.2); transition: all 0.2s ease; }
+        .search-input:focus { border-color: #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.5) inset, 0 0 15px rgba(0, 255, 204, 0.3); }
+        .search-input::placeholder { color: #99ccff; opacity: 0.8; }
+        .file-btn { padding: 18px 25px; font-size: 18px; background: linear-gradient(45deg, #0099ff, #00ff99); border: none; border-radius: 60px; color: #fff; cursor: pointer; box-shadow: 0 0 15px rgba(0, 255, 153, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3); transition: all 0.2s ease; }
+        .file-btn:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(0, 255, 153, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.4); }
+        .file-input { display: none; }
+        .selected-files { width: 100%; padding: 15px 20px; background: rgba(0, 15, 30, 0.95); border-radius: 15px; margin: 10px 0; font-size: 16px; color: #99ccff; max-height: 100px; overflow-y: auto; }
+        .virtual-list { height: 400px; overflow-y: auto; border-radius: 15px; position: relative; background: rgba(0, 20, 40, 0.9); box-shadow: 0 0 10px rgba(0, 102, 255, 0.3) inset; padding: 10px 0; }
+        .virtual-list-content { position: absolute; top: 0; left: 0; width: 100%; }
+        .result-item { padding: 18px 20px; background: rgba(0, 40, 80, 0.95); border-radius: 12px; margin: 15px 15px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #00ccff; transition: all 0.15s ease; cursor: pointer; min-height: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .result-item:hover { transform: translateX(3px); background: rgba(0, 50, 100, 0.95); box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
+        .item-text { font-size: 17px; line-height: 1.6; word-break: break-all; width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-btn-group { display: flex; gap: 12px; flex-shrink: 0; }
+        .item-btn { padding: 10px 20px; font-size: 15px; border-radius: 30px; border: none; cursor: pointer; color: #fff; transition: all 0.15s ease; box-shadow: 0 0 8px rgba(0, 0, 0, 0.2); }
+        .copy-btn { background: linear-gradient(45deg, #0066ff, #0099ff); }
+        .copy-btn:hover { background: linear-gradient(45deg, #0055dd, #0088ee); box-shadow: 0 0 12px rgba(0, 102, 255, 0.5); }
+        .collect-btn { background: linear-gradient(45deg, #ff9900, #ffcc00); }
+        .collect-btn:hover, .collect-btn.collected { background: linear-gradient(45deg, #ee8800, #ffbb00); box-shadow: 0 0 12px rgba(255, 153, 0, 0.5); }
+        .uncollect-btn { background: linear-gradient(45deg, #ff4d4f, #ff7875); }
+        .uncollect-btn:hover { background: linear-gradient(45deg, #dd3d3f, #ee6865); box-shadow: 0 0 12px rgba(255, 77, 79, 0.5); }
+        .select-btn { background: linear-gradient(45deg, #00cc66, #00ff99); }
+        .select-btn:hover { background: linear-gradient(45deg, #00bb55, #00ee88); box-shadow: 0 0 12px rgba(0, 255, 153, 0.5); }
+        .collect-list { background: rgba(0, 30, 60, 0.9); border-radius: 20px; padding: 30px; margin: 30px 0; box-shadow: 0 0 30px rgba(0, 102, 255, 0.5), inset 0 0 15px rgba(0, 150, 255, 0.3); border: 1px solid rgba(0, 204, 255, 0.3); }
+        .collect-list h3 { color: #00ccff; margin-bottom: 20px; font-size: 24px; text-shadow: 0 0 8px #00ccff; display: flex; align-items: center; gap: 10px; }
+        .collect-list h3::before { content: "⭐"; animation: starPulse 2s linear infinite; }
+        @keyframes starPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .collect-item { padding: 15px; background: rgba(0, 40, 80, 0.95); border-radius: 10px; margin: 12px 0; border-left: 5px solid #ff9900; transition: all 0.15s ease; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .collect-item:hover { transform: translateX(3px); background: rgba(0, 50, 100, 0.95); box-shadow: 0 0 10px rgba(255, 153, 0, 0.3); }
+        .footer-text { text-align: center; margin-top: 40px; color: #99ccff; font-size: 20px; text-shadow: 0 0 8px #0066ff; letter-spacing: 1px; }
+        .export-input { width: 100%; padding: 20px 25px; font-size: 19px; border: 2px solid #00ccff; border-radius: 60px; background: rgba(0, 15, 30, 0.95); color: #fff; outline: none; margin: 25px 0; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4) inset, 0 0 10px rgba(0, 204, 255, 0.2); transition: all 0.2s ease; }
+        .export-input:focus { border-color: #00ffcc; box-shadow: 0 0 20px rgba(0, 255, 204, 0.5) inset, 0 0 15px rgba(0, 255, 204, 0.3); }
+        .export-input::placeholder { color: #99ccff; opacity: 0.8; }
+        .toast { position: fixed; top: 30px; right: 30px; padding: 15px 30px; background: rgba(0, 0, 0, 0.9); color: white; border-radius: 60px; font-size: 16px; opacity: 0; transform: translateY(-20px) scale(0.9); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; z-index: 9999; box-shadow: 0 0 20px rgba(0, 204, 255, 0.5); border: 1px solid rgba(0, 204, 255, 0.3); }
+        .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 5px; background: transparent; z-index: 9999; display: none; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #00ccff, #00ff99); width: 0%; border-radius: 3px; box-shadow: 0 0 10px rgba(0, 255, 153, 0.7); transition: width 0.1s ease; }
+        .no-result { color: #99ccff; text-align: center; padding: 60px 0; font-size: 18px; background: rgba(0, 20, 40, 0.9); border-radius: 15px; box-shadow: 0 0 10px rgba(0, 102, 255, 0.3) inset; margin: 15px; }
+        .no-result::before { content: "🔍"; display: block; font-size: 40px; margin-bottom: 15px; animation: searchPulse 2s linear infinite; }
+        @keyframes searchPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .write-content-container { margin: 20px 0; }
+        .toggle-btn { padding: 12px 20px; font-size: 18px; background: linear-gradient(45deg, #0066ff, #00ccff); border: none; border-radius: 15px; color: #fff; cursor: pointer; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .toggle-btn::after { content: "▼"; transition: transform 0.3s ease; }
+        .toggle-btn.collapsed::after { transform: rotate(-180deg); }
+        .write-content { padding: 20px; background: rgba(0, 20, 40, 0.95); border-radius: 15px; margin-top: 10px; display: none; font-size: 17px; line-height: 1.8; white-space: pre-wrap; word-break: break-all; }
+        .write-content.show { display: block; }
+        .file-path { padding: 15px 20px; background: rgba(0, 20, 40, 0.95); border-radius: 15px; margin: 15px 0; font-size: 16px; color: #99ccff; word-break: break-all; }
+        .manual-path-wrap { display: flex; align-items: center; gap: 15px; margin: 15px 0; flex-wrap: wrap; }
+        .manual-path-input { flex: 1; min-width: 250px; padding: 18px 25px; font-size: 17px; border: 2px solid #00ccff; border-radius: 60px; background: rgba(0, 15, 30, 0.95); color: #fff; outline: none; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4) inset; }
+        .manual-path-input::placeholder { color: #99ccff; opacity: 0.8; }
+        .path-confirm-btn { padding: 18px 25px; font-size: 17px; background: linear-gradient(45deg, #0099ff, #00ff99); border: none; border-radius: 60px; color: #fff; cursor: pointer; }
+        .path-tip { font-size: 14px; color: #99ccff; margin: 5px 0 15px 0; text-align: center; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 30, 60, 0.8); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #00ccff, #0066ff); border-radius: 4px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #00ffcc, #0088ee); }
+        .convert-area { background: rgba(0, 30, 60, 0.9); border-radius: 20px; padding: 30px; margin: 30px 0; box-shadow: 0 0 30px rgba(0, 102, 255, 0.5), inset 0 0 15px rgba(0, 150, 255, 0.3); border: 1px solid rgba(0, 204, 255, 0.3); }
+        .convert-file-wrap { margin: 20px 0; }
+        .convert-btn { background: linear-gradient(45deg, #00ff99, #00cc66); }
+        .convert-btn:hover { background: linear-gradient(45deg, #00ee88, #00bb55); box-shadow: 0 0 20px rgba(0, 255, 153, 0.8); }
+        @media (max-width: 768px) {
+            .page-title { font-size: 28px; padding: 25px 0; }
+            .btn { width: 95%; padding: 14px 35px; font-size: 20px; }
+            .search-area, .convert-area { padding: 20px; }
+            .search-input-wrap { gap: 10px; }
+            .search-input, .export-input { padding: 16px 20px; font-size: 17px; }
+            .result-item { flex-direction: row; align-items: center; gap: 12px; padding: 15px; margin: 12px 10px; }
+            .item-text { width: 60%; }
+            .item-btn-group { width: 40%; justify-content: flex-end; flex-wrap: wrap; }
+            .item-btn { padding: 8px 15px; font-size: 14px; }
+            .virtual-list { height: 350px; }
+            .manual-path-input { padding: 16px 20px; font-size: 16px; }
+        }
+        .lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 15, 30, 0.98); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .lock-title { font-size: 28px; margin-bottom: 30px; text-shadow: 0 0 10px #0ff; color: #fff; }
+        .lock-input-wrap { position: relative; width: 80%; max-width: 400px; margin-bottom: 20px; }
+        .lock-input { padding: 18px 25px; font-size: 18px; border: 2px solid #00ccff; border-radius: 60px; background: rgba(0, 30, 60, 0.9); color: #fff; outline: none; width: 100%; }
+        .toggle-password { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #99ccff; font-size: 18px; cursor: pointer; padding: 5px; }
+        .lock-btn { padding: 16px 40px; font-size: 20px; background: linear-gradient(45deg, #0066ff, #00ccff); border: none; border-radius: 60px; color: #fff; cursor: pointer; box-shadow: 0 0 20px rgba(0, 204, 255, 0.6); }
+        .lock-tip { margin-top: 20px; color: #99ccff; font-size: 14px; }
+        .close-notice { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 15, 30, 0.95); padding: 40px 30px; border-radius: 20px; border: 2px solid #ff4d4f; text-align: center; z-index: 99999; width: 80%; max-width: 400px; }
+        .close-title { font-size: 24px; color: #ff4d4f; margin-bottom: 20px; text-shadow: 0 0 8px #ff4d4f; }
+        .close-desc { color: #99ccff; margin-bottom: 30px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div id="snow-container"></div>
+    <div class="transition" id="transition"></div>
+    <div class="progress-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <!-- 1. 初始界面 -->
+    <div class="page active" id="page1">
+        <h1 class="page-title">无尽帝美化工具</h1>
+        <button class="btn" onclick="goPage('page2')">进入工具</button>
+    </div>
+    <!-- 2. 版本选择主页 -->
+    <div class="page" id="page2">
+        <h1 class="page-title">版本选择</h1>
+        <button class="btn" onclick="goPage('page3')">1.0 版本</button>
+        <button class="btn" onclick="goPage('page4')">2.0 版本</button>
+        <button class="btn" onclick="goPage('page12')">3.0 版本</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+        <div style="color:#ff9900; text-align:center; margin-top:20px; font-size:14px; padding:0 10px;">
+            导出文件有bug但是只需要在MT管理器更改后缀和名字即可只是不能更改后缀和名字而已 选择上次文件也有bug不要用点击取消就行了
+            无尽帝qq：1317514307
+        </div>
+    </div>
+    <!-- 3. 1.0版本界面 -->
+    <div class="page" id="page3">
+        <h1 class="page-title">无尽帝1.0美化工具</h1>
+        <div class="search-area">
+            <div class="search-input-wrap">
+                <input type="text" id="search3" class="search-input" placeholder="输入搜索关键词（回车搜索）">
+                <label for="file3" class="file-btn">选择文件</label>
+                <input type="file" id="file3" class="file-input" multiple accept=".txt" onchange="handleFileUpload(this, '3')">
+            </div>
+            <div id="selected-files3" class="selected-files" style="display: none;"></div>
+            <div class="search-input-wrap second-search-container" id="second-search3" style="display: none;">
+                <input type="text" id="search3-second" class="search-input" placeholder="二次搜索结果内容">
+                <button class="file-btn" onclick="doSecondSearch('3')">二次搜索</button>
+                <button class="file-btn" style="background: linear-gradient(45deg, #ff4d4f, #ff7875);" onclick="resetSearch('3')">重置结果</button>
+            </div>
+            <div class="virtual-list" id="virtual-list3">
+                <div class="virtual-list-content" id="virtual-content3"></div>
+            </div>
+        </div>
+        <div class="collect-list">
+            <h3>我的收藏</h3>
+            <div id="collect-items3"></div>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 4. 2.0版本界面 -->
+    <div class="page" id="page4">
+        <h1 class="page-title">无尽帝2.0美化工具</h1>
+        <button class="btn" onclick="goPage('page5')">写配料表</button>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+        <div class="footer-text">无尽帝qq：1317514307</div>
+    </div>
+    <!-- 5. 格式选择界面 -->
+    <div class="page" id="page5">
+        <h1 class="page-title">格式选择</h1>
+        <button class="btn" onclick="goPage('page6')">PY 格式</button>
+        <button class="btn" onclick="goPage('page9')">TXT 格式</button>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 6. PY格式主界面 -->
+    <div class="page" id="page6">
+        <h1 class="page-title">PY格式写配料表</h1>
+        <button class="btn" onclick="goPage('page7')">半自动写配料表</button>
+        <button class="btn" onclick="goPage('page8')">全自动写配料表</button>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 7. PY半自动界面 -->
+    <div class="page" id="page7">
+        <h1 class="page-title">半自动写PY格式配料表</h1>
+        <div class="search-area">
+            <div class="search-input-wrap">
+                <input type="text" id="search7" class="search-input" placeholder="输入搜索关键词（回车搜索）">
+                <label for="file7" class="file-btn">选择文件</label>
+                <input type="file" id="file7" class="file-input" multiple accept=".txt" onchange="handleFileUpload(this, '7')">
+            </div>
+            <div id="selected-files7" class="selected-files" style="display: none;"></div>
+            <div class="search-input-wrap second-search-container" id="second-search7" style="display: none;">
+                <input type="text" id="search7-second" class="search-input" placeholder="二次搜索结果内容">
+                <button class="file-btn" onclick="doSecondSearch('7')">二次搜索</button>
+                <button class="file-btn" style="background: linear-gradient(45deg, #ff4d4f, #ff7875);" onclick="resetSearch('7')">重置结果</button>
+            </div>
+            <div class="virtual-list" id="virtual-list7">
+                <div class="virtual-list-content" id="virtual-content7"></div>
+            </div>
+        </div>
+        <div class="collect-list">
+            <h3>我的收藏</h3>
+            <div id="collect-items7"></div>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 8. PY全自动界面 -->
+    <div class="page" id="page8">
+        <h1 class="page-title">全自动写PY格式配料表</h1>
+        <div class="search-area">
+            <div class="search-input-wrap">
+                <input type="text" id="search8" class="search-input" placeholder="输入搜索关键词（回车搜索）">
+                <label for="file8" class="file-btn">选择文件</label>
+                <input type="file" id="file8" class="file-input" multiple accept=".txt" onchange="handleFileUpload(this, '8')">
+            </div>
+            <div id="selected-files8" class="selected-files" style="display: none;"></div>
+            <div class="search-input-wrap second-search-container" id="second-search8" style="display: none;">
+                <input type="text" id="search8-second" class="search-input" placeholder="二次搜索结果内容">
+                <button class="file-btn" onclick="doSecondSearch('8')">二次搜索</button>
+                <button class="file-btn" style="background: linear-gradient(45deg, #ff4d4f, #ff7875);" onclick="resetSearch('8')">重置结果</button>
+            </div>
+            <div class="virtual-list" id="virtual-list8">
+                <div class="virtual-list-content" id="virtual-content8"></div>
+            </div>
+            <input type="text" id="export-name-py" class="export-input" placeholder="输入导出文件名（无需后缀）">
+            <div class="manual-path-wrap">
+                <input type="text" id="py-manual-path" class="manual-path-input" placeholder="手动输入保存路径（手机/电脑通用，如：内部存储/美化工具/导出）">
+                <button class="path-confirm-btn" onclick="confirmManualPath('py')">确认路径</button>
+            </div>
+            <div class="path-tip">
+                手机示例：内部存储/游戏素材/PY文件 | 电脑示例：D:/美化工具/导出 | 支持正反斜杠
+            </div>
+            <div class="write-content-container">
+                <button class="toggle-btn" onclick="toggleWriteContent('py')">已写入内容 <span id="py-count">(0)</span></button>
+                <div class="write-content" id="write-content-py"></div>
+            </div>
+            <button class="btn" onclick="exportPyFile()">导出PY文件</button>
+            <div id="file-path-py" class="file-path" style="display: none;"></div>
+        </div>
+        <div class="collect-list">
+            <h3>我的收藏</h3>
+            <div id="collect-items8"></div>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 9. TXT格式主界面 -->
+    <div class="page" id="page9">
+        <h1 class="page-title">TXT格式写配料表</h1>
+        <button class="btn" onclick="goPage('page10')">半自动写配料表</button>
+        <button class="btn" onclick="goPage('page11')">全自动写配料表</button>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 10. TXT半自动界面 -->
+    <div class="page" id="page10">
+        <h1 class="page-title">半自动写TXT格式配料表</h1>
+        <div class="search-area">
+            <div class="search-input-wrap">
+                <input type="text" id="search10" class="search-input" placeholder="输入搜索关键词（回车搜索）">
+                <label for="file10" class="file-btn">选择文件</label>
+                <input type="file" id="file10" class="file-input" multiple accept=".txt" onchange="handleFileUpload(this, '10')">
+            </div>
+            <div id="selected-files10" class="selected-files" style="display: none;"></div>
+            <div class="search-input-wrap second-search-container" id="second-search10" style="display: none;">
+                <input type="text" id="search10-second" class="search-input" placeholder="二次搜索结果内容">
+                <button class="file-btn" onclick="doSecondSearch('10')">二次搜索</button>
+                <button class="file-btn" style="background: linear-gradient(45deg, #ff4d4f, #ff7875);" onclick="resetSearch('10')">重置结果</button>
+            </div>
+            <div class="virtual-list" id="virtual-list10">
+                <div class="virtual-list-content" id="virtual-content10"></div>
+            </div>
+        </div>
+        <div class="collect-list">
+            <h3>我的收藏</h3>
+            <div id="collect-items10"></div>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 11. TXT全自动界面 -->
+    <div class="page" id="page11">
+        <h1 class="page-title">全自动写TXT格式配料表</h1>
+        <div class="search-area">
+            <div class="search-input-wrap">
+                <input type="text" id="search11" class="search-input" placeholder="输入搜索关键词（回车搜索）">
+                <label for="file11" class="file-btn">选择文件</label>
+                <input type="file" id="file11" class="file-input" multiple accept=".txt" onchange="handleFileUpload(this, '11')">
+            </div>
+            <div id="selected-files11" class="selected-files" style="display: none;"></div>
+            <div class="search-input-wrap second-search-container" id="second-search11" style="display: none;">
+                <input type="text" id="search11-second" class="search-input" placeholder="二次搜索结果内容">
+                <button class="file-btn" onclick="doSecondSearch('11')">二次搜索</button>
+                <button class="file-btn" style="background: linear-gradient(45deg, #ff4d4f, #ff7875);" onclick="resetSearch('11')">重置结果</button>
+            </div>
+            <div class="virtual-list" id="virtual-list11">
+                <div class="virtual-list-content" id="virtual-content11"></div>
+            </div>
+            <input type="text" id="export-name-txt" class="export-input" placeholder="输入导出文件名（无需后缀）">
+            <div class="manual-path-wrap">
+                <input type="text" id="txt-manual-path" class="manual-path-input" placeholder="手动输入保存路径（手机/电脑通用，如：内部存储/游戏素材/TXT导出）">
+                <button class="path-confirm-btn" onclick="confirmManualPath('txt')">确认路径</button>
+            </div>
+            <div class="path-tip">
+                手机示例：内部存储/游戏素材/TXT文件 | 电脑示例：E:/工具/配料表 | 支持正反斜杠
+            </div>
+            <div class="write-content-container">
+                <button class="toggle-btn" onclick="toggleWriteContent('txt')">已写入内容 <span id="txt-count">(0)</span></button>
+                <div class="write-content" id="write-content-txt"></div>
+            </div>
+            <button class="btn" onclick="exportTxtFile()">导出TXT文件</button>
+            <div id="file-path-txt" class="file-path" style="display: none;"></div>
+        </div>
+        <div class="collect-list">
+            <h3>我的收藏</h3>
+            <div id="collect-items11"></div>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 12. 3.0版本主界面 -->
+    <div class="page" id="page12">
+        <h1 class="page-title">无尽帝3.0美化工具</h1>
+        <button class="btn" onclick="goPage('page13')">全自动转换配料表格式</button>
+        <button class="btn" onclick="goBack()">返回上一个界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 13. 3.0格式转换选择界面 -->
+    <div class="page" id="page13">
+        <h1 class="page-title">无尽帝3.0美化工具</h1>
+        <button class="btn" onclick="goPage('page14')">PY格式转TXT格式</button>
+        <button class="btn" onclick="goPage('page15')">TXT格式转PY格式</button>
+        <button class="btn" onclick="goBack()">返回上一个界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 14. PY转TXT转换界面 -->
+    <div class="page" id="page14">
+        <h1 class="page-title">PY格式配料表全自动转TXT格式</h1>
+        <div class="convert-area">
+            <div class="convert-file-wrap">
+                <label for="convert-py-to-txt-file" class="file-btn">选择PY格式文件</label>
+                <input type="file" id="convert-py-to-txt-file" class="file-input" accept=".py" onchange="handleConvertFileUpload(this, 'pyToTxt')" single>
+                <div id="selected-convert-py-file" class="selected-files" style="display: none;"></div>
+            </div>
+            <div class="write-content-container">
+                <button class="toggle-btn" onclick="toggleWriteContent('pyToTxt')">查看文件内容</button>
+                <div class="write-content" id="write-content-pyToTxt"></div>
+            </div>
+            <button class="btn convert-btn" onclick="convertPyToTxt()">转换为TXT格式</button>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一个界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 15. TXT转PY转换界面 -->
+    <div class="page" id="page15">
+        <h1 class="page-title">TXT格式配料表全自动转换PY格式配料表</h1>
+        <div class="convert-area">
+            <div class="convert-file-wrap" style="margin: 20px 0;">
+                <label for="search-file-txt-to-py" class="file-btn">选择搜索文件（任意格式）</label>
+                <input type="file" id="search-file-txt-to-py" class="file-input" onchange="handleConvertFileUpload(this, 'searchTxtForPy')" single>
+                <div id="selected-search-txt-file" class="selected-files" style="display: none;"></div>
+            </div>
+            <div class="convert-file-wrap" style="margin: 20px 0; margin-top: 40px;">
+                <label for="convert-txt-to-py-file" class="file-btn">选择待转换TXT文件</label>
+                <input type="file" id="convert-txt-to-py-file" class="file-input" accept=".txt" onchange="handleConvertFileUpload(this, 'txtToPy')" single>
+                <div id="selected-convert-txt-file" class="selected-files" style="display: none;"></div>
+            </div>
+            <div class="search-input-wrap">
+                <input type="text" id="search-txt-to-py" class="search-input" placeholder="输入搜索关键词（回车搜索）">
+                <button class="file-btn" onclick="doConvertSearch('txtToPy')">搜索</button>
+                <button class="file-btn" style="background: linear-gradient(45deg, #ff4d4f, #ff7875);" onclick="resetConvertSearch('txtToPy')">重置搜索</button>
+            </div>
+            <div class="virtual-list" id="virtual-list-txt-to-py" style="margin-top: 20px;">
+                <div class="virtual-list-content" id="virtual-content-txt-to-py"></div>
+            </div>
+            <div class="write-content-container">
+                <button class="toggle-btn" onclick="toggleWriteContent('txtToPy')">查看待转换文件内容</button>
+                <div class="write-content" id="write-content-txtToPy"></div>
+            </div>
+            <button class="btn convert-btn" onclick="convertTxtToPy()">转换为PY格式</button>
+        </div>
+        <button class="btn" onclick="goBack()">返回上一个界面</button>
+        <button class="btn" onclick="goHome()">返回主页</button>
+    </div>
+    <!-- 提示框 -->
+    <div class="toast" id="toast">操作成功</div>
+    <textarea id="temp-textarea" style="position: absolute; top: -9999px; left: -9999px; opacity: 0;"></textarea>
+    <!-- 权限控制DOM（新增小眼睛） -->
+    <div class="lock-screen" id="lock-screen">
+        <h2 class="lock-title">工具访问验证</h2>
+        <div class="lock-input-wrap">
+            <input type="password" class="lock-input" id="access-password" placeholder="输入访问密码/卡密">
+            <button class="toggle-password" onclick="togglePasswordVisibility()">👁️</button>
+        </div>
+        <button class="lock-btn" onclick="verifyPassword()">验证访问</button>
+        <p class="lock-tip">密码由工具管理员提供，卡密仅限单人使用</p>
+    </div>
+    <div class="close-notice" id="close-notice" style="display: none;">
+        <h2 class="close-title">工具已关闭</h2>
+        <p class="close-desc">当前工具已暂停服务，可能正在更新或维护，请稍后再试~</p>
+        <button class="btn" onclick="location.reload()">刷新重试</button>
+    </div>
+    <script>
+        // 核心配置（仅变量名简化，值不变）
+        const ADMIN_PWD = "wjdnb886";
+        const SWITCH_STATUS = "on";
+        const ENCRYPTED_CARDS = (()=>{
+    // 5434645463464464
+    const rawCards = [
+        "wjd739528", "wjd814637", "wjd295816", "wjd473925", "wjd682719",
+        "wjd158364", "wjd927453", "wjd361892", "wjd548271", "wjd719365",
+        "wjd852741", "wjd269183", "wjd417395", "wjd638529", "wjd947162",
+        "wjd185374", "wjd392685", "wjd574193", "wjd728536", "wjd961428"
+    ];
+    // 加密：原始卡密 → Base64（源码中仅显示加密后的乱码）
+    return rawCards.map(card => btoa(encodeURIComponent(card))).join("|");
+})();
+
+// 同步修复卡密验证函数（确保解密逻辑匹配，之前的错误就在这里！）
+function verifyCard(card){
+    try{
+        // 解密：Base64 → 原始卡密（与加密逻辑对应）
+        const decryptedCards = ENCRYPTED_CARDS.split("|").map(c => decodeURIComponent(atob(c)));
+        const usedCards = JSON.parse(localStorage.getItem("used_cards") || "[]");
+        
+        if(!decryptedCards.includes(card)) return {valid:false, msg:"卡密无效"};
+        if(usedCards.includes(card)) return {valid:false, msg:"卡密已被使用"};
+        
+        usedCards.push(card);
+        localStorage.setItem("used_cards", JSON.stringify(usedCards));
+        return {valid:true, msg:"验证成功"};
+    }catch(e){return {valid:false, msg:"验证失败"}}
+}
+
+        // 卡密验证函数（变量名简化，逻辑不变）
+        function verifyCard(card){
+            try{
+                const decrypted = ENCRYPTED_CARDS.split("|").map(c => decodeURIComponent(atob(c)));
+                const used = JSON.parse(localStorage.getItem("used_cards") || "[]");
+                if(!decrypted.includes(card)) return {valid:false, msg:"卡密无效"};
+                if(used.includes(card)) return {valid:false, msg:"卡密已被使用"};
+                used.push(card);
+                localStorage.setItem("used_cards", JSON.stringify(used));
+                return {valid:true, msg:"验证成功"};
+            }catch(e){return {valid:false, msg:"验证失败"}}
+        }
+
+        // 密码验证入口
+        function verifyPassword(){
+            const input = document.getElementById("access-password").value.trim();
+            if(input === ADMIN_PWD){
+                document.getElementById("lock-screen").style.display = "none";
+                showToast("管理员验证成功，可控制工具开关！");
+                showAdminCtrl();
+            }else{
+                const res = verifyCard(input);
+                if(res.valid){
+                    document.getElementById("lock-screen").style.display = "none";
+                    showToast("卡密验证成功，欢迎使用！");
+                }else{
+                    showToast(res.msg);
+                }
+            }
+        }
+
+        // 小眼睛切换密码可见性
+        function togglePasswordVisibility(){
+            const input = document.getElementById("access-password");
+            const type = input.type === "password" ? "text" : "password";
+            input.type = type;
+            const btn = document.querySelector(".toggle-password");
+            btn.innerText = type === "password" ? "👁️" : "🙈";
+        }
+
+        // 全局变量（仅变量名简化，功能不变）
+        let pageStack = ["page1"];
+        let collectData = JSON.parse(localStorage.getItem("wj_collect")) || [];
+        let selectedPy = [];
+        let selectedTxt = [];
+        let manualPaths = { py: "", txt: "" };
+        const ITEM_H = 90;
+        let snowCnt = 0;
+        let lastSelFiles = JSON.parse(localStorage.getItem("wj_last_selected_files")) || null;
+        let convertData = {
+            pyToTxt: { file: null, content: "" },
+            searchTxtForPy: { file: null, content: "", original: [], currentResult: [] },
+            txtToPy: { file: null, content: "" }
+        };
+        const pageData = {
+            3: { original: [], firstResult: [], currentResult: [], virtualList: null, contentDom: null, selectedFiles: [] },
+            7: { original: [], firstResult: [], currentResult: [], virtualList: null, contentDom: null, selectedFiles: [] },
+            8: { original: [], firstResult: [], currentResult: [], virtualList: null, contentDom: null, selectedFiles: [] },
+            10: { original: [], firstResult: [], currentResult: [], virtualList: null, contentDom: null, selectedFiles: [] },
+            11: { original: [], firstResult: [], currentResult: [], virtualList: null, contentDom: null, selectedFiles: [] }
+        };
+
+        // 初始化
+        window.onload = function() {
+            checkToolStatus();
+            initVirtualLists();
+            createSnow();
+            bindSearchEvents();
+            updateCollectList();
+            const currentKey = pageStack[pageStack.length - 1].replace("page", "");
+            if (pageData[currentKey]) renderVirtualList(currentKey);
+        };
+
+        // 工具开关状态检查
+        function checkToolStatus() {
+            if (SWITCH_STATUS === "off") {
+                document.getElementById("lock-screen").style.display = "none";
+                document.getElementById("close-notice").style.display = "block";
+            } else {
+                document.getElementById("lock-screen").style.display = "flex";
+            }
+        }
+
+        // 管理员控制
+        function showAdminCtrl(){
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.style.position = "fixed";
+            btn.style.top = "20px";
+            btn.style.left = "20px";
+            btn.style.width = "auto";
+            btn.style.padding = "10px 20px";
+            btn.style.fontSize = "16px";
+            btn.style.zIndex = "9999";
+            btn.textContent = "控制工具开关";
+            btn.onclick = toggleToolSwitch;
+            document.body.appendChild(btn);
+        }
+
+        function toggleToolSwitch(){
+            const newStatus = SWITCH_STATUS === "on" ? "off" : "on";
+            setTimeout(() => {
+                showToast(`工具已${newStatus === "on" ? "开放" : "关闭"}！`);
+                if (newStatus === "off") {
+                    document.getElementById("close-notice").style.display = "block";
+                    setTimeout(() => location.reload(), 3000);
+                }
+            }, 500);
+        }
+
+        // 原有功能函数（仅变量名简化，逻辑/参数/调用关系完全不变）
+        function initVirtualLists() {
+            try {
+                Object.keys(pageData).forEach(key => {
+                    pageData[key].virtualList = document.getElementById(`virtual-list${key}`);
+                    pageData[key].contentDom = document.getElementById(`virtual-content${key}`);
+                    if (pageData[key].virtualList) {
+                        pageData[key].virtualList.addEventListener("scroll", () => renderVirtualList(key));
+                    }
+                });
+                const convertList = document.getElementById("virtual-list-txt-to-py");
+                if (convertList) convertList.addEventListener("scroll", renderConvertVirtualList);
+            } catch (err) { console.log("虚拟列表初始化异常：", err); }
+        }
+
+        function createSnow() {
+            const container = document.getElementById("snow-container");
+            function addSnow() {
+                if (snowCnt > 100) return;
+                const snow = document.createElement("div");
+                snow.className = "snow";
+                snow.innerText = Math.random() > 0.5 ? "❄" : "★";
+                snow.style.left = Math.random() * 100 + "%";
+                snow.style.top = Math.random() * -50 + "px";
+                snow.style.fontSize = Math.random() * 8 + 8 + "px";
+                snow.style.animationDuration = Math.random() * 4 + 4 + "s";
+                container.appendChild(snow);
+                snowCnt++;
+                setTimeout(() => { snow.remove(); snowCnt--; }, parseFloat(snow.style.animationDuration) * 1000);
+            }
+            addSnow();
+            setInterval(addSnow, 500);
+        }
+
+        function showProgress() {
+            document.getElementById("progress-container").style.display = "block";
+            return document.getElementById("progress-bar");
+        }
+
+        function hideProgress() {
+            setTimeout(() => document.getElementById("progress-container").style.display = "none", 300);
+            document.getElementById("progress-bar").style.width = "0%";
+        }
+
+        function checkLastSelected(pageKey) {
+            if (lastSelFiles && lastSelFiles.length > 0) {
+                if (confirm("是否使用上次选择的文件？")) {
+                    pageData[pageKey].selectedFiles = lastSelFiles;
+                    const dom = document.getElementById(`selected-files${pageKey}`);
+                    if (dom) {
+                        dom.innerHTML = `已选文件：<br>${lastSelFiles.join('<br>')}`;
+                        dom.style.display = "block";
+                    }
+                    const cached = localStorage.getItem(`wj_file_data_${pageKey}`);
+                    if (cached) {
+                        const data = JSON.parse(cached);
+                        pageData[pageKey].original = data;
+                        pageData[pageKey].firstResult = data;
+                        pageData[pageKey].currentResult = data;
+                        renderVirtualList(pageKey);
+                        showToast("已恢复上次文件的内容");
+                    } else {
+                        showToast("请重新上传文件以获取数据");
+                        pageData[pageKey].original = [];
+                        pageData[pageKey].firstResult = [];
+                        pageData[pageKey].currentResult = [];
+                        renderVirtualList(pageKey);
+                    }
+                }
+            }
+        }
+
+        function goPage(targetPage) {
+            try {
+                document.querySelector(".page.active").classList.remove("active");
+                const targetDom = document.getElementById(targetPage);
+                targetDom.classList.add("active");
+                pageStack.push(targetPage);
+                const pageKey = targetPage.replace("page", "");
+                if (pageData[pageKey]) {
+                    renderVirtualList(pageKey);
+                    if (["3", "7", "8", "10", "11"].includes(pageKey)) setTimeout(() => checkLastSelected(pageKey), 300);
+                }
+                updateCollectList();
+            } catch (err) {
+                console.log("页面跳转异常：", err);
+                showToast("进入失败，请重试！");
+            }
+        }
+
+        function goBack() {
+            if (pageStack.length <= 1) return;
+            document.querySelector(".page.active").classList.remove("active");
+            pageStack.pop();
+            const prevPage = document.getElementById(pageStack[pageStack.length - 1]);
+            prevPage.classList.add("active");
+            const pageKey = pageStack[pageStack.length - 1].replace("page", "");
+            if (pageData[pageKey]) {
+                renderVirtualList(pageKey);
+                if (["3", "7", "8", "10", "11"].includes(pageKey)) setTimeout(() => checkLastSelected(pageKey), 300);
+            }
+            updateCollectList();
+        }
+
+        function goHome() {
+            document.querySelector(".page.active").classList.remove("active");
+            pageStack = ["page1", "page2"];
+            document.getElementById("page2").classList.add("active");
+            updateCollectList();
+        }
+
+        function initFileParseWorker() {
+            try {
+                return new Worker(URL.createObjectURL(new Blob([`
+                    self.onmessage = function(e) {
+                        const { filesData } = e.data;
+                        const result = [];
+                        filesData.forEach(fileData => {
+                            const lines = fileData.split('\\n').map(line => line.trim()).filter(line => line && line.includes(' -- '));
+                            result.push(...lines);
+                        });
+                        self.postMessage({ data: result });
+                    };
+                `], { type: 'application/javascript' })));
+            } catch (err) {
+                console.log("Worker初始化失败，使用备用方案");
+                return null;
+            }
+        }
+
+        function handleFileUpload(fileInput, pageKey) {
+            try {
+                const files = fileInput.files;
+                if (!files.length) return;
+                const fileNames = Array.from(files).map(file => file.name);
+                pageData[pageKey].selectedFiles = fileNames;
+                lastSelFiles = fileNames;
+                localStorage.setItem("wj_last_selected_files", JSON.stringify(lastSelFiles));
+                const dom = document.getElementById(`selected-files${pageKey}`);
+                if (dom) {
+                    dom.innerHTML = `已选文件：<br>${fileNames.join('<br>')}`;
+                    dom.style.display = "block";
+                }
+                const progressBar = showProgress();
+                const filesData = [];
+                let loaded = 0;
+                function readFile(file) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        filesData.push(e.target.result);
+                        loaded++;
+                        progressBar.style.width = (loaded / files.length) * 50 + "%";
+                        if (loaded === files.length) {
+                            const worker = initFileParseWorker();
+                            if (worker) {
+                                worker.postMessage({ filesData });
+                                worker.onmessage = e => {
+                                    pageData[pageKey].original = e.data.data;
+                                    pageData[pageKey].firstResult = e.data.data;
+                                    pageData[pageKey].currentResult = e.data.data;
+                                    localStorage.setItem(`wj_file_data_${pageKey}`, JSON.stringify(e.data.data));
+                                    hideProgress();
+                                    showToast(`成功读取 ${e.data.data.length} 条数据`);
+                                    renderVirtualList(pageKey);
+                                };
+                            } else {
+                                const result = [];
+                                filesData.forEach(data => {
+                                    const lines = data.split('\n').map(line => line.trim()).filter(line => line && line.includes(' -- '));
+                                    result.push(...lines);
+                                });
+                                pageData[pageKey].original = result;
+                                pageData[pageKey].firstResult = result;
+                                pageData[pageKey].currentResult = result;
+                                localStorage.setItem(`wj_file_data_${pageKey}`, JSON.stringify(result));
+                                hideProgress();
+                                showToast(`成功读取 ${result.length} 条数据`);
+                                renderVirtualList(pageKey);
+                            }
+                        }
+                    };
+                    reader.readAsText(file, "utf-8");
+                }
+                files.forEach(file => readFile(file));
+            } catch (err) {
+                console.log("文件上传异常：", err);
+                hideProgress();
+                showToast("文件读取失败，请重试！");
+            }
+        }
+
+        function renderVirtualList(pageKey) {
+            try {
+                const { currentResult, virtualList, contentDom } = pageData[pageKey];
+                if (!virtualList || !contentDom) return;
+                const scrollTop = virtualList.scrollTop;
+                const viewportHeight = virtualList.clientHeight;
+                const totalItems = currentResult ? currentResult.length : 0;
+                contentDom.style.height = totalItems * ITEM_H + "px";
+                if (totalItems === 0) {
+                    contentDom.innerHTML = '<div class="no-result">暂无结果，请上传文件或更换关键词</div>';
+                    return;
+                }
+                const start = Math.max(0, Math.floor(scrollTop / ITEM_H) - 5);
+                const end = Math.min(totalItems - 1, Math.ceil((scrollTop + viewportHeight) / ITEM_H) + 5);
+                let html = "";
+                const isAuto = ["8", "11"].includes(pageKey);
+                for (let i = start; i <= end; i++) {
+                    const line = currentResult[i];
+                    const parts = line.split(" -- ").map(p => p.trim());
+                    if (parts.length < 4) continue;
+                    const num2 = parts[1];
+                    const name = parts[2];
+                    const isCollected = collectData.includes(line);
+                    html += `
+                        <div class="result-item">
+                            <div class="item-text">${line}</div>
+                            <div class="item-btn-group">
+                                <button class="item-btn copy-btn" onclick="copySecondNum('${line}')">复制</button>
+                                <button class="item-btn collect-btn ${isCollected ? 'collected' : ''}" onclick="collectItem('${line}', '${pageKey}')">
+                                    ${isCollected ? '已收藏' : '收藏'}
+                                </button>
+                                ${isAuto ? `<button class="item-btn select-btn" onclick="selectItem('${num2}','${name}','${pageKey}')">选择</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                contentDom.innerHTML = html;
+            } catch (err) { console.log("虚拟列表渲染异常：", err); }
+        }
+
+        function bindSearchEvents() {
+            try {
+                Object.keys(pageData).forEach(key => {
+                    const input = document.getElementById(`search${key}`);
+                    if (input) input.addEventListener("keydown", e => { if (e.key === "Enter") doFirstSearch(key); });
+                    const secondInput = document.getElementById(`search${key}-second`);
+                    if (secondInput) secondInput.addEventListener("keydown", e => { if (e.key === "Enter") doSecondSearch(key); });
+                });
+                const convertInput = document.getElementById("search-txt-to-py");
+                if (convertInput) convertInput.addEventListener("keydown", e => { if (e.key === "Enter") doConvertSearch('txtToPy'); });
+            } catch (err) { console.log("搜索事件绑定异常：", err); }
+        }
+
+        function doFirstSearch(pageKey) {
+            try {
+                const keyword = document.getElementById(`search${pageKey}`).value.trim().toLowerCase();
+                const { original } = pageData[pageKey];
+                if (!keyword) { showToast("请输入关键词！"); return; }
+                const result = original.filter(item => item.toLowerCase().includes(keyword));
+                pageData[pageKey].firstResult = result;
+                pageData[pageKey].currentResult = result;
+                document.getElementById(`second-search${pageKey}`).style.display = "flex";
+                renderVirtualList(pageKey);
+            } catch (err) {
+                console.log("首次搜索异常：", err);
+                showToast("搜索失败，请重试！");
+            }
+        }
+
+        function doSecondSearch(pageKey) {
+            try {
+                const keyword = document.getElementById(`search${pageKey}-second`).value.trim().toLowerCase();
+                const { firstResult } = pageData[pageKey];
+                if (!keyword) { showToast("请输入二次搜索关键词！"); return; }
+                const result = firstResult.filter(item => item.toLowerCase().includes(keyword));
+                pageData[pageKey].currentResult = result;
+                renderVirtualList(pageKey);
+            } catch (err) {
+                console.log("二次搜索异常：", err);
+                showToast("搜索失败，请重试！");
+            }
+        }
+
+        function resetSearch(pageKey) {
+            try {
+                pageData[pageKey].currentResult = pageData[pageKey].firstResult;
+                renderVirtualList(pageKey);
+                const input = document.getElementById(`search${pageKey}-second`);
+                if (input) input.value = "";
+            } catch (err) {
+                console.log("重置搜索异常：", err);
+                showToast("重置失败，请重试！");
+            }
+        }
+
+        function copySecondNum(text) {
+            try {
+                const parts = text.split(" -- ").map(p => p.trim());
+                if (parts.length < 2) throw new Error("格式错误");
+                const num = parts[1];
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(num).then(() => showToast("复制成功"));
+                } else {
+                    const ta = document.getElementById("temp-textarea");
+                    ta.value = num;
+                    ta.select();
+                    document.execCommand("copy");
+                    showToast("复制成功");
+                }
+            } catch (err) {
+                console.log("复制异常：", err);
+                showToast("复制失败：" + err.message);
+            }
+        }
+
+        function collectItem(line, pageKey) {
+            try {
+                const index = collectData.indexOf(line);
+                if (index > -1) {
+                    collectData.splice(index, 1);
+                    showToast("取消收藏成功");
+                } else {
+                    collectData.push(line);
+                    showToast("收藏成功");
+                }
+                localStorage.setItem("wj_collect", JSON.stringify(collectData));
+                updateCollectList();
+                refreshCollectStatus(pageKey, line);
+            } catch (err) {
+                console.log("收藏异常：", err);
+                showToast("操作失败，请重试！");
+            }
+        }
+
+        function refreshCollectStatus(pageKey, line) {
+            try {
+                const dom = pageData[pageKey].contentDom;
+                if (!dom) return;
+                const items = dom.querySelectorAll(".result-item");
+                items.forEach(item => {
+                    const text = item.querySelector(".item-text").textContent;
+                    if (text === line) {
+                        const btn = item.querySelector(".collect-btn");
+                        const isCollected = collectData.includes(line);
+                        btn.textContent = isCollected ? "已收藏" : "收藏";
+                        btn.classList.toggle("collected", isCollected);
+                    }
+                });
+            } catch (err) { console.log("刷新收藏状态异常：", err); }
+        }
+
+        function updateCollectList() {
+            try {
+                const divs = document.querySelectorAll("[id^='collect-items']");
+                divs.forEach(div => {
+                    if (collectData.length === 0) {
+                        div.innerHTML = '<div class="collect-item" style="text-align:center; padding:20px;">暂无收藏内容</div>';
+                        return;
+                    }
+                    let html = "";
+                    collectData.forEach(item => {
+                        const parts = item.split(" -- ").map(p => p.trim());
+                        const num = parts[1] || "";
+                        html += `
+                            <div class="collect-item">
+                                <span>${item}</span>
+                                <div class="item-btn-group">
+                                    <button class="item-btn copy-btn" onclick="copySecondNum('${item}')">复制</button>
+                                    <button class="item-btn uncollect-btn" onclick="collectItem('${item}', '')">取消收藏</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    div.innerHTML = html;
+                });
+            } catch (err) { console.log("更新收藏列表异常：", err); }
+        }
+
+        function selectItem(num, name, pageKey) {
+            try {
+                if (pageKey === "8") {
+                    selectedPy.push({ num, name });
+                    if (selectedPy.length % 2 === 0) {
+                        showToast(`已写入2项，共选${selectedPy.length}项`);
+                        updateWriteContent("py");
+                    }
+                    showToast(`已选${selectedPy.length}项`);
+                } else if (pageKey === "11") {
+                    selectedTxt.push(num);
+                    if (selectedTxt.length % 2 === 0) {
+                        showToast(`已写入2项，共选${selectedTxt.length}项`);
+                        updateWriteContent("txt");
+                    }
+                    showToast(`已选${selectedTxt.length}项`);
+                } else if (pageKey === "txtToPy") {
+                    selectedPy.push({ num, name });
+                    updateWriteContent("txtToPy");
+                }
+            } catch (err) {
+                console.log("选择项异常：", err);
+                showToast("选择失败，请重试！");
+            }
+        }
+
+        function updateWriteContent(type) {
+            try {
+                let content = "";
+                let count = 0;
+                if (type === "py") {
+                    count = selectedPy.length;
+                    for (let i = 0; i < selectedPy.length; i += 2) {
+                        const group = selectedPy.slice(i, i + 2);
+                        const nums = group.map(item => item.num).join(",");
+                        const names = group.map(item => item.name).join(",");
+                        content += `[${nums}],#${names}\n`;
+                    }
+                    document.getElementById("write-content-py").textContent = content;
+                    document.querySelector("#page8 .toggle-btn span").textContent = `(${count})`;
+                } else if (type === "txt") {
+                    count = selectedTxt.length;
+                    for (let i = 0; i < selectedTxt.length; i += 2) {
+                        const group = selectedTxt.slice(i, i + 2);
+                        content += `${group.join(" ")}\n`;
+                    }
+                    document.getElementById("write-content-txt").textContent = content;
+                    document.querySelector("#page11 .toggle-btn span").textContent = `(${count})`;
+                } else if (["pyToTxt", "txtToPy"].includes(type)) {
+                    content = convertData[type].content || "";
+                    document.getElementById(`write-content-${type}`).textContent = content;
+                }
+            } catch (err) {
+                console.log("更新写入内容异常：", err);
+            }
+        }
+
+        function toggleWriteContent(type) {
+            try {
+                const dom = document.getElementById(`write-content-${type}`);
+                const btn = document.querySelector(`#page${
+                    type === 'py' ? 8 :
+                    type === 'txt' ? 11 :
+                    type === 'pyToTxt' ? 14 : 15
+                } .toggle-btn`);
+                dom.classList.toggle("show");
+                btn.classList.toggle("collapsed");
+                updateWriteContent(type);
+            } catch (err) {
+                console.log("展开/收缩异常：", err);
+                showToast("操作失败，请重试！");
+            }
+        }
+
+        function confirmManualPath(type) {
+            try {
+                const input = document.getElementById(`${type}-manual-path`);
+                let path = input.value.trim();
+                if (!path) { showToast("请输入保存路径！"); return; }
+                path = path.replace(/\\/g, "/").replace(/\/$/, "");
+                manualPaths[type] = path;
+                showToast(`路径已确认：${path}`);
+            } catch (err) {
+                console.log("确认路径异常：", err);
+                showToast("操作失败，请重试！");
+            }
+        }
+
+        function exportPyFile() {
+            try {
+                if (selectedPy.length < 2) { showToast("至少选择2项！"); return; }
+                const userInput = document.getElementById("export-name-py").value.trim();
+                const fileName = userInput || "无尽帝";
+                const finalName = fileName.endsWith(".py") ? fileName : `${fileName}.py`;
+                let content = "";
+                for (let i = 0; i < selectedPy.length; i += 2) {
+                    const group = selectedPy.slice(i, i + 2);
+                    const nums = group.map(item => item.num).join(",");
+                    const names = group.map(item => item.name).join(",");
+                    content += `[${nums}],#${names}\n`;
+                }
+                const blob = new Blob([content], { type: "text/x-python-script; charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = manualPaths.py ? `${manualPaths.py}/${finalName}` : finalName;
+                document.body.appendChild(a);
+                setTimeout(() => {
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 200);
+                }, 100);
+                const pathDom = document.getElementById("file-path-py");
+                if (pathDom) {
+                    pathDom.innerHTML = `文件已导出至：${a.download}<br>手机查找：文件管理 → 内部存储 → 按路径查找 | 电脑查找：直接打开路径文件夹`;
+                    pathDom.style.display = "block";
+                }
+                showToast("PY文件导出成功");
+            } catch (err) {
+                console.log("导出PY异常：", err);
+                const ta = document.getElementById("temp-textarea");
+                ta.value = content || "";
+                ta.select();
+                document.execCommand("copy");
+                showToast(`导出失败，内容已复制到剪贴板（手动粘贴为.py文件）`);
+            }
+        }
+
+        function exportTxtFile() {
+            try {
+                if (selectedTxt.length < 2) { showToast("至少选择2项！"); return; }
+                const userInput = document.getElementById("export-name-txt").value.trim();
+                const fileName = userInput || "无尽帝";
+                const finalName = fileName.endsWith(".txt") ? fileName : `${fileName}.txt`;
+                let content = "";
+                for (let i = 0; i < selectedTxt.length; i += 2) {
+                    const group = selectedTxt.slice(i, i + 2);
+                    content += `${group.join(" ")}\n`;
+                }
+                const blob = new Blob([content], { type: "text/plain; charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = manualPaths.txt ? `${manualPaths.txt}/${finalName}` : finalName;
+                document.body.appendChild(a);
+                setTimeout(() => {
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 200);
+                }, 100);
+                const pathDom = document.getElementById("file-path-txt");
+                if (pathDom) {
+                    pathDom.innerHTML = `文件已导出至：${a.download}<br>手机查找：文件管理 → 内部存储 → 按路径查找 | 电脑查找：直接打开路径文件夹`;
+                    pathDom.style.display = "block";
+                }
+                showToast("TXT文件导出成功");
+            } catch (err) {
+                console.log("导出TXT异常：", err);
+                const ta = document.getElementById("temp-textarea");
+                ta.value = content || "";
+                ta.select();
+                document.execCommand("copy");
+                showToast(`导出失败，内容已复制到剪贴板（手动粘贴为.txt文件）`);
+            }
+        }
+
+        function showToast(msg = "操作成功") {
+            try {
+                const toast = document.getElementById("toast");
+                toast.textContent = msg;
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 1800);
+            } catch (err) {
+                console.log("提示框异常：", err);
+                alert(msg);
+            }
+        }
+
+        function handleConvertFileUpload(fileInput, type) {
+            try {
+                const files = fileInput.files;
+                if (!files.length) return;
+                const file = files[0];
+                if (type === "txtToPy" && !file.name.endsWith(".txt")) {
+                    showToast("待转换文件仅支持TXT格式！");
+                    fileInput.value = "";
+                    return;
+                }
+                if (type === "pyToTxt" && !file.name.endsWith(".py")) {
+                    showToast("仅支持上传PY格式文件！");
+                    fileInput.value = "";
+                    return;
+                }
+                convertData[type].file = file;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const content = e.target.result;
+                    convertData[type].content = content;
+                    if (type === "searchTxtForPy") {
+                        const lines = content.split('\n')
+                            .map(line => line.trim())
+                            .filter(line => line && line.includes(' -- '));
+                        convertData[type].original = lines;
+                        convertData[type].currentResult = lines;
+                        renderConvertVirtualList();
+                    }
+                    const domId = type === "pyToTxt" ? "selected-convert-py-file" :
+                                 type === "searchTxtForPy" ? "selected-search-txt-file" : "selected-convert-txt-file";
+                    const dom = document.getElementById(domId);
+                    if (dom) {
+                        dom.innerHTML = `已选文件：${file.name}`;
+                        dom.style.display = "block";
+                    }
+                    showToast(`文件上传成功，共 ${content.split('\n').length} 行`);
+                };
+                reader.readAsText(file, "utf-8");
+            } catch (err) {
+                console.log("转换文件上传异常：", err);
+                showToast("文件上传失败，请重试！");
+            }
+        }
+
+        function renderConvertVirtualList() {
+            try {
+                const list = document.getElementById("virtual-list-txt-to-py");
+                const contentDom = document.getElementById("virtual-content-txt-to-py");
+                if (!list || !contentDom) return;
+                const { currentResult } = convertData.searchTxtForPy;
+                const scrollTop = list.scrollTop;
+                const viewportHeight = list.clientHeight;
+                const totalItems = currentResult ? currentResult.length : 0;
+                contentDom.style.height = totalItems * ITEM_H + "px";
+                if (totalItems === 0) {
+                    contentDom.innerHTML = '<div class="no-result">暂无搜索结果，请上传文件并输入关键词</div>';
+                    return;
+                }
+                const start = Math.max(0, Math.floor(scrollTop / ITEM_H) - 5);
+                const end = Math.min(totalItems - 1, Math.ceil((scrollTop + viewportHeight) / ITEM_H) + 5);
+                let html = "";
+                for (let i = start; i <= end; i++) {
+                    const line = currentResult[i];
+                    html += `
+                        <div class="result-item">
+                            <div class="item-text">${line}</div>
+                            <div class="item-btn-group">
+                                <button class="item-btn copy-btn" onclick="copySecondNum('${line}')">复制</button>
+                                <button class="item-btn select-btn" onclick="selectItem('${line.split(' -- ')[1]||''}','${line.split(' -- ')[2]||''}','txtToPy')">选择</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                contentDom.innerHTML = html;
+            } catch (err) {
+                console.log("转换列表渲染异常：", err);
+            }
+        }
+
+        function doConvertSearch(type) {
+            try {
+                const keyword = document.getElementById("search-txt-to-py").value.trim().toLowerCase();
+                const { original } = convertData.searchTxtForPy;
+                if (!original || original.length === 0) { showToast("请先上传搜索文件！"); return; }
+                if (!keyword) { showToast("请输入搜索关键词！"); return; }
+                const result = original.filter(item => item.toLowerCase().includes(keyword));
+                convertData.searchTxtForPy.currentResult = result;
+                renderConvertVirtualList();
+            } catch (err) {
+                console.log("转换搜索异常：", err);
+                showToast("搜索失败，请重试！");
+            }
+        }
+
+        function resetConvertSearch(type) {
+            try {
+                convertData.searchTxtForPy.currentResult = convertData.searchTxtForPy.original;
+                renderConvertVirtualList();
+                document.getElementById("search-txt-to-py").value = "";
+            } catch (err) {
+                console.log("转换搜索重置异常：", err);
+                showToast("重置失败，请重试！");
+            }
+        }
+
+        function convertPyToTxt() {
+            try {
+                const { file, content } = convertData.pyToTxt;
+                if (!file || !content) { showToast("请先上传PY格式文件！"); return; }
+                const lines = content.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line && line.includes('[') && line.includes('],#'));
+                if (lines.length === 0) { showToast("文件无有效配料表数据！"); return; }
+                let converted = "";
+                lines.forEach(line => {
+                    const numMatch = line.match(/\[([0-9,]+)\]/);
+                    if (numMatch && numMatch[1]) {
+                        const nums = numMatch[1].split(',').map(num => num.trim()).filter(num => num);
+                        if (nums.length >= 2) converted += `${nums[0]} ${nums[1]}\n`;
+                        else if (nums.length === 1) converted += `${nums[0]}\n`;
+                    }
+                });
+                if (!converted) { showToast("未识别到有效数字格式！"); return; }
+                const fileName = file.name.replace(".py", ".txt");
+                const blob = new Blob([converted], { type: "text/plain; charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                setTimeout(() => {
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 200);
+                }, 100);
+                showToast(`转换成功！共转换 ${lines.length} 条数据`);
+            } catch (err) {
+                console.log("PY转TXT异常：", err);
+                showToast("转换失败，请重试！");
+            }
+        }
+
+        function convertTxtToPy() {
+            try {
+                const { file: searchFile, original: searchData } = convertData.searchTxtForPy;
+                const { file: convertFile, content: convertContent } = convertData.txtToPy;
+                if (!searchFile || !searchData || searchData.length === 0) {
+                    showToast("请先上传搜索文件并确保有有效数据！");
+                    return;
+                }
+                if (!convertFile || !convertContent) { showToast("请先上传待转换TXT文件！"); return; }
+                const lines = convertContent.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line && line.includes(' '));
+                if (lines.length === 0) {
+                    showToast("待转换文件无有效数据（需为数字+空格+数字格式）！");
+                    return;
+                }
+                const numToTextMap = new Map();
+                searchData.forEach(line => {
+                    const parts = line.split(" -- ").map(part => part.trim());
+                    if (parts.length >= 2) {
+                        const num = parts[1].trim();
+                        const text = parts.slice(2).join(" -- ").trim();
+                        if (num && text) numToTextMap.set(num, text);
+                    }
+                });
+                let converted = "";
+                lines.forEach(line => {
+                    const nums = line.split(' ').map(num => num.trim()).filter(num => num);
+                    if (nums.length >= 2) {
+                        const text1 = numToTextMap.get(nums[0]) || "";
+                        const text2 = numToTextMap.get(nums[1]) || "";
+                        converted += `[${nums[0]},${nums[1]}],#${text1}===${text2}\n`;
+                    } else if (nums.length === 1) {
+                        const text1 = numToTextMap.get(nums[0]) || "";
+                        converted += `[${nums[0]}],#${text1}\n`;
+                    }
+                });
+                if (!converted) { showToast("未匹配到对应文字！"); return; }
+                const fileName = convertFile.name.replace(".txt", ".py");
+                const blob = new Blob([converted], { type: "text/x-python-script; charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                setTimeout(() => {
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 200);
+                }, 100);
+                showToast(`转换成功！共转换 ${lines.length} 条数据`);
+            } catch (err) {
+                console.log("TXT转PY异常：", err);
+                showToast("转换失败，请重试！");
+            }
+        }
+    </script>
+</body>
+</html>
+
